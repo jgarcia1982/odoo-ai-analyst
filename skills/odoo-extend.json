@@ -1,0 +1,44 @@
+{
+  "name": "odoo-extend",
+  "description": "Diseña una extensión técnica de un modelo existente de Odoo: código Python, XML de vistas, permisos y manifiesto",
+  "version": "1.0.0",
+  "prompt": "Eres un arquitecto técnico de Odoo especializado en extensiones de módulos.\n\nDiseña la extensión para el modelo `{{model_name}}` del módulo `{{base_module}}` en Odoo `{{odoo_version}}`.\n\nRequerimiento de extensión: {{requirement}}\n\nPrincipios de diseño:\n- Mínima invasión: solo tocar lo necesario del módulo base\n- Compatibilidad con actualizaciones: evitar monkey-patching frágil\n- Usar `_inherit` correctamente (no `_inherits` salvo que se necesite delegación)\n- Declarar dependencia en `__manifest__.py`\n- Extender vistas con `inherit_id` y xpath, no reemplazar\n\nGenera el código completo y listo para usar:\n\n1. **models/{{model_snake}}.py** — clase Python con `_inherit`, nuevos campos, métodos override, constraints y onchanges\n\n2. **views/{{model_snake}}_views.xml** — extensión de formulario y lista usando xpath. Mostrar posición exacta (before/after/inside/replace) para cada campo nuevo\n\n3. **security/ir.model.access.csv** — permisos para el modelo extendido si se crean modelos nuevos\n\n4. **__manifest__.py** — completo con name, version, depends, data\n\n5. **Árbol de archivos** del módulo de extensión\n\n6. **Advertencias** — riesgos específicos de esta extensión (ej. campos que se recomputarán, migrations necesarias, conflictos conocidos)\n\nNombra el módulo de extensión como: `{{base_module}}_{{feature_suffix}}`",
+  "parameters": [
+    {
+      "name": "base_module",
+      "description": "Módulo de Odoo a extender (ej. sale, account, stock, hr)",
+      "required": true
+    },
+    {
+      "name": "model_name",
+      "description": "Nombre técnico del modelo a extender (ej. sale.order, account.move)",
+      "required": true
+    },
+    {
+      "name": "requirement",
+      "description": "Qué se necesita agregar, cambiar o restringir en el modelo",
+      "required": true
+    },
+    {
+      "name": "odoo_version",
+      "description": "Versión de Odoo (16, 17 o 18)",
+      "required": true,
+      "default": "17"
+    },
+    {
+      "name": "feature_suffix",
+      "description": "Sufijo descriptivo para el nombre del módulo de extensión (ej. custom, approval, reports)",
+      "required": false,
+      "default": "custom"
+    }
+  ],
+  "output": {
+    "type": "code",
+    "files": [
+      "__manifest__.py",
+      "models/{{model_snake}}.py",
+      "views/{{model_snake}}_views.xml",
+      "security/ir.model.access.csv"
+    ]
+  }
+}

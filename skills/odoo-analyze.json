@@ -1,0 +1,30 @@
+{
+  "name": "odoo-analyze",
+  "description": "Analiza un módulo de Odoo y genera documentación técnica completa: summary, models, views, security y extension_points",
+  "version": "1.0.0",
+  "prompt": "Eres un arquitecto técnico de Odoo especializado en análisis de módulos.\n\nAnaliza el módulo Odoo ubicado en: {{module_path}}\nVersión de Odoo: {{odoo_version}}\n\nSigue este proceso:\n\n1. Lee __manifest__.py e identifica: nombre, versión, dependencias, archivos de datos\n2. Revisa todos los archivos .py en models/ e identifica modelos (_name, _inherit), campos, y métodos de negocio\n3. Revisa los archivos XML en views/ e identifica tipos de vista y campos expuestos\n4. Revisa security/ para grupos, permisos CRUD (ir.model.access.csv) y reglas de dominio (ir.rule)\n5. Identifica puntos de extensión: métodos con super(), campos compute redefinibles, vistas con inherit_id\n\nGenera los siguientes documentos en el directorio de trabajo actual:\n\n- summary.md: propósito, versión, dependencias, modelos principales\n- models.md: tabla de modelos con campos, tipos, descripciones y relaciones\n- views.md: lista de vistas por tipo con campos principales\n- security.md: tabla de permisos por modelo y grupo\n- extension_points.md: hooks, métodos overrideables, patrones recomendados\n- requirement_guidelines.md: guía para el desarrollador antes de modificar el módulo\n\nSé preciso y técnico. No inventes campos que no existan en el código.",
+  "parameters": [
+    {
+      "name": "module_path",
+      "description": "Ruta absoluta al directorio del módulo Odoo (ej. /odoo/addons/sale)",
+      "required": true
+    },
+    {
+      "name": "odoo_version",
+      "description": "Versión de Odoo a analizar (16, 17 o 18)",
+      "required": true,
+      "default": "17"
+    }
+  ],
+  "output": {
+    "type": "files",
+    "files": [
+      "summary.md",
+      "models.md",
+      "views.md",
+      "security.md",
+      "extension_points.md",
+      "requirement_guidelines.md"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "name": "odoo-spec",
+  "description": "Genera una especificación técnica completa para desarrollo en Odoo a partir de un requerimiento funcional",
+  "version": "1.0.0",
+  "prompt": "Eres un arquitecto técnico de Odoo. Convierte el siguiente requerimiento funcional en una especificación técnica lista para un desarrollador.\n\nRequerimiento: {{requirement}}\nVersión de Odoo: {{odoo_version}}\nContexto del cliente: {{context}}\n\nProceso:\n\n1. Clasifica el tipo de cambio: nuevo módulo, extensión, modificación de flujo, integración, reporte, o automatización\n\n2. Identifica los módulos de Odoo estándar afectados y los modelos que se tocarán\n\n3. Diseña la solución técnica mínima necesaria:\n   - Modelos a crear o heredar\n   - Campos nuevos con nombre técnico (snake_case), tipo ORM, y restricciones\n   - Métodos de negocio necesarios\n   - Cambios en vistas (formulario, lista, kanban)\n   - Grupos de seguridad y permisos\n   - Flujo de estados si aplica\n\n4. Lista los archivos a crear con su estructura\n\nFormato de salida:\n\nGenera un archivo `spec.md` con:\n- Resumen ejecutivo (2-3 oraciones)\n- Nombre técnico del módulo\n- Tabla de dependencias\n- Tabla de modelos con campos\n- Descripción de vistas principales\n- Tabla de permisos\n- Diagrama de flujo de estados (si aplica)\n- Árbol de archivos a crear\n- Consideraciones técnicas y advertencias\n- Nivel de complejidad: Bajo / Medio / Alto con justificación\n\nSé específico con los nombres técnicos. Usa convenciones de Odoo: snake_case para campos, PascalCase para clases Python.",
+  "parameters": [
+    {
+      "name": "requirement",
+      "description": "Descripción del requerimiento funcional en lenguaje natural",
+      "required": true
+    },
+    {
+      "name": "odoo_version",
+      "description": "Versión de Odoo objetivo (16, 17 o 18)",
+      "required": true,
+      "default": "17"
+    },
+    {
+      "name": "context",
+      "description": "Contexto del cliente: industria, módulos instalados, restricciones especiales",
+      "required": false,
+      "default": "Cliente estándar, sin restricciones especiales"
+    }
+  ],
+  "output": {
+    "type": "files",
+    "files": ["spec.md"]
+  }
+}
