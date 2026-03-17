@@ -80,11 +80,62 @@ Produce a file named `spec.md` using this exact structure:
 
 ## Step 4 — Self-review before output
 
-Before writing the final spec, verify every item in this checklist against your generated code. Fix any violation — do not just mention it as a risk or consideration.
+Before writing the final spec, verify every item against your generated code. Fix any violation in the code itself — do not just mention it as a risk.
 
-- [ ] Every `account.move` query includes `('company_id', '=', order.company_id.id)`
-- [ ] Partner credit queries use `('partner_id', 'child_of', partner.commercial_partner_id.id)` — never `('partner_id', '=', partner.id)`
-- [ ] `action_confirm()` only raises `UserError` or calls `super()` — it never returns a wizard action
-- [ ] If user input is needed before confirming (exception note, approval reason), a **separate button** in the view opens the wizard — not `action_confirm()`
-- [ ] Every override of `action_confirm()`, `action_post()`, or `button_validate()` calls `super()`
-- [ ] No `write({'state': '...'})` anywhere in the generated code
+**Check 1 — Partner credit domain must use `child_of`, not `=`**
+
+```python
+# ❌ WRONG — misses subsidiaries and contacts of the same company
+('partner_id', '=', self.partner_id.commercial_partner_id.id),
+
+# ✅ CORRECT
+('partner_id', 'child_of', self.partner_id.commercial_partner_id.id),
+```
+
+**Check 2 — Every `account.move` query must include `company_id`**
+
+```python
+# ✅ REQUIRED — always add this line to every account.move search
+('company_id', '=', self.company_id.id),
+```
+
+**Check 3 — `action_confirm()` never returns a wizard**
+
+```python
+# ❌ WRONG — action_confirm() returning a wizard breaks Odoo's standard flow
+def action_confirm(self):
+    if condition:
+        return {'type': 'ir.actions.act_window', ...}  # NEVER DO THIS
+
+# ✅ CORRECT — action_confirm() only raises or calls super()
+def action_confirm(self):
+    for order in self:
+        if order.overdue_amount > 0 and not order.exception_granted:
+            raise UserError(_('Cannot confirm. Use the "Grant Exception" button first.'))
+    return super().action_confirm()
+
+# ✅ CORRECT — a separate button in the view opens the wizard
+def action_open_exception_wizard(self):
+    return {
+        'type': 'ir.actions.act_window',
+        'res_model': 'my.exception.wizard',
+        'view_mode': 'form',
+        'target': 'new',
+        'context': {'default_order_id': self.id},
+    }
+```
+
+The view has two separate buttons:
+```xml
+<button name="action_open_exception_wizard" string="Grant Exception" type="object"
+        groups="my_module.group_credit_manager"
+        invisible="exception_granted or overdue_amount == 0"/>
+<button name="action_confirm" string="Confirm" type="object"
+        invisible="state != 'draft'"/>
+```
+
+- [ ] Domain uses `child_of` not `=` for partner queries
+- [ ] Every `account.move` search includes `company_id` filter
+- [ ] `action_confirm()` does not return a wizard — separate button used instead
+- [ ] Every override calls `super()`
+- [ ] No `write({'state': '...'})` in generated code
