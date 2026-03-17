@@ -77,3 +77,14 @@ Produce a file named `spec.md` using this exact structure:
 - `store=True` requires `@api.depends`
 - Multi-company queries always filter by `company_id`
 - Use `commercial_partner_id` + `child_of` for partner credit checks
+
+## Step 4 — Self-review before output
+
+Before writing the final spec, verify every item in this checklist against your generated code. Fix any violation — do not just mention it as a risk or consideration.
+
+- [ ] Every `account.move` query includes `('company_id', '=', order.company_id.id)`
+- [ ] Partner credit queries use `('partner_id', 'child_of', partner.commercial_partner_id.id)` — never `('partner_id', '=', partner.id)`
+- [ ] `action_confirm()` only raises `UserError` or calls `super()` — it never returns a wizard action
+- [ ] If user input is needed before confirming (exception note, approval reason), a **separate button** in the view opens the wizard — not `action_confirm()`
+- [ ] Every override of `action_confirm()`, `action_post()`, or `button_validate()` calls `super()`
+- [ ] No `write({'state': '...'})` anywhere in the generated code
