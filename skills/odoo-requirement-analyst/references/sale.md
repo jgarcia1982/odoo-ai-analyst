@@ -54,6 +54,27 @@ class SaleOrder(models.Model):
         return super().action_confirm()  # NEVER omit super()
 ```
 
+**CRITICAL — `action_confirm()` must NEVER return a wizard action.**
+If the flow requires user input (exception note, approval reason), use a **separate button** that opens the wizard. `action_confirm()` only raises UserError or calls super() — nothing else.
+
+```python
+# ❌ WRONG — action_confirm() returning a wizard breaks standard Odoo flow
+def action_confirm(self):
+    if condition:
+        return {'type': 'ir.actions.act_window', ...}  # DO NOT DO THIS
+
+# ✅ CORRECT — separate button opens the wizard; action_confirm() only validates
+def action_confirm(self):
+    for order in self:
+        if order.needs_exception and not order.exception_granted:
+            raise UserError(_('Requires exception. Use the "Grant Exception" button.'))
+    return super().action_confirm()
+
+def action_open_exception_wizard(self):
+    # This is called by a separate button in the view, not from action_confirm
+    return {'type': 'ir.actions.act_window', 'res_model': 'my.wizard', ...}
+```
+
 ### Override `_prepare_invoice()` — add data to the generated invoice
 
 ```python
@@ -138,4 +159,6 @@ New group pattern:
 - ❌ Override without `super()` — loses stock picking creation, emails, automations
 - ❌ `store=True` field without `@api.depends` — computed field never updates
 - ❌ Query `account.move` without `company_id` filter — breaks multi-company
-- ✅ Use `partner_id.commercial_partner_id` + `child_of` for credit checks across contacts
+- ❌ `action_confirm()` returning a wizard — use a separate button instead
+- ❌ `('partner_id', '=', self.partner_id.id)` for credit checks — misses subsidiaries and contacts
+- ✅ Use `('partner_id', 'child_of', self.partner_id.commercial_partner_id.id)` for credit checks

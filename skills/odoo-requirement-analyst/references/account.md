@@ -71,6 +71,11 @@ class AccountMove(models.Model):
 
 ### Query overdue invoices for a partner (credit check pattern)
 
+**Always use `commercial_partner_id` + `child_of`** — never `partner_id =` directly.
+`commercial_partner_id` is the top-level company contact. Using `child_of` catches all
+subsidiaries and contact persons under the same company. Using `= partner_id.id` directly
+only checks invoices billed to that exact contact, missing the rest of the group's debt.
+
 ```python
 from odoo import fields
 from datetime import timedelta
@@ -79,12 +84,12 @@ today = fields.Date.today()
 cutoff = today - timedelta(days=30)
 
 moves = self.env['account.move'].search([
-    ('partner_id', 'child_of', partner.commercial_partner_id.id),
+    ('partner_id', 'child_of', order.partner_id.commercial_partner_id.id),  # ← commercial_partner_id + child_of
     ('move_type', 'in', ('out_invoice', 'out_refund')),
     ('state', '=', 'posted'),
     ('payment_state', 'in', ('not_paid', 'partial')),
     ('invoice_date_due', '<', cutoff),
-    ('company_id', '=', company.id),
+    ('company_id', '=', order.company_id.id),  # ← always filter by company
 ])
 total_overdue = sum(moves.mapped('amount_residual'))
 ```
@@ -166,5 +171,7 @@ move.action_post()
 - ❌ Modifying lines of a posted move — raises integrity error
 - ❌ Query without `company_id` filter — breaks multi-company
 - ❌ Using `payment_state` to determine if a move is paid via direct write — it's computed
+- ❌ `('partner_id', '=', partner.id)` in credit check — misses subsidiaries and contacts of the same company
 - ✅ Use `amount_residual > 0` + `payment_state in ('not_paid', 'partial')` for outstanding balance
 - ✅ Always pass `invoice_origin` when creating invoices from other documents
+- ✅ Always use `commercial_partner_id` + `child_of` when querying debt for a partner
